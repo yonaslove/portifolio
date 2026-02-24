@@ -119,61 +119,62 @@ const Contact = () => {
       }
 
       console.log("Sending contact form:", submissionData);
-
-      // Call edge function to send email
       let sent = false;
+
+      // 1. Try Vercel/Local API first (uses SMTP configured in .env)
       try {
-        const { data, error } = await supabase.functions.invoke('send-contact-email', {
-          body: submissionData
+        const resp = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submissionData),
         });
 
-        if (!error && data && (data as any).success) {
+        if (resp.ok) {
           sent = true;
-          console.log('Email sent via Supabase function', data);
+          console.log('Email sent via API (Vercel/Local)');
         } else {
-          console.error('Supabase function error:', error || data);
+          const errData = await resp.json().catch(() => ({}));
+          console.error('API delivery failed:', errData);
         }
-      } catch (fnErr) {
-        console.warn('Supabase function call failed, checking fallback...', fnErr);
+      } catch (apiErr) {
+        console.warn('API call failed, trying Supabase fallback...', apiErr);
       }
 
-      // Fallback 1: local API server (only works if server is running)
-      if (!sent && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      // 2. Fallback to Supabase Edge Function if above fails
+      if (!sent) {
         try {
-          const resp = await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(submissionData),
+          const { data, error } = await supabase.functions.invoke('send-contact-email', {
+            body: submissionData
           });
 
-          if (resp.ok) {
+          if (!error && data && (data as any).success) {
             sent = true;
-            console.log('Email sent via local API');
+            console.log('Email sent via Supabase fallback');
           }
-        } catch (localErr) {
-          console.error('Local API fallback failed:', localErr);
+        } catch (fnErr) {
+          console.warn('Supabase fallback failed:', fnErr);
         }
       }
 
       if (sent) {
         toast({
           title: "Message Sent! 🎉",
-          description: "Thanks for reaching out! I've received your message.",
+          description: "Thanks for reaching out! I'll get back to you soon.",
         });
         setFormData({ name: "", email: "", message: "" });
       } else {
-        // Fallback 2: Direct Mail Client (The Ultimate Fail-Safe)
+        // 3. Ultimate Fallback: Direct Mail Client
+        console.warn('All automated methods failed. Falling back to mailto.');
+
         toast({
-          title: "Service Busy",
-          description: "Automatic delivery failed. Opening your email client...",
-          variant: "default",
+          title: "Directing to Email",
+          description: "Automated delivery busy. Opening your mail client...",
         });
 
         const subject = encodeURIComponent(`Portfolio Contact: ${validatedData.name}`);
         const body = encodeURIComponent(submissionData.message);
         window.location.href = `mailto:yonasyirgu718@gmail.com?subject=${subject}&body=${body}`;
 
-        // We consider this a "soft success" as the user can still send the message
         setFormData({ name: "", email: "", message: "" });
       }
     } catch (error) {

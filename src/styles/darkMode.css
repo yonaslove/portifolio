@@ -1,0 +1,33 @@
+/* Light Mode (Default) */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #111111;
+}
+
+/* Dark Mode */
+.dark-mode {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: 0.35s ease-in-out;
+}
+
+/* Make transitions smooth across all components */
+* {
+  transition: background-color 0.35s ease-in-out, color 0.35s ease-in-out;
+}
+/* ✅ Full-page white blur overlay */
+.blur-mode::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.744); /* ✅ soft white brightness */
+  z-index: 999;
+  pointer-events: none; /* ✅ do not block clicking */
+  transition: all 0.35s ease;
+}

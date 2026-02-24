@@ -1,0 +1,28 @@
+Category,Item,Details
+Profile,Name,Yonas Yirgu
+Profile,Role,Senior Full Stack Developer & Software Engineer
+Profile,Location,Addis Ababa, Ethiopia
+Profile,Email,yonasyirgu718@gmail.com
+Profile,Phone,+251 987 384 233
+Profile,GitHub,https://github.com/yonaslove/
+Profile,LinkedIn,https://linkedin.com/in/yonas-yirgu
+Experience,2024,Senior Full Stack Developer at Tech Innovations Inc
+Experience,2022,Full Stack Developer at Digital Solutions Ltd
+Experience,2020,Backend Developer at Cloud Services Co
+Experience,2018,Junior Developer at StartUp Ventures
+Skills,Frontend,"React, Vue, Next.js, TypeScript, Tailwind CSS, Redux, React Native"
+Skills,Backend,"Node.js, Python, PostgreSQL, MongoDB, Redis, NestJS, FastAPI, GraphQL, Prisma"
+Skills,DevOps,"Docker, Kubernetes, AWS, CI/CD, GitHub Actions"
+Project,AI Chat Platform,"Real-time chat with AI and NLP. Tech: React, Node.js, OpenAI, WebSocket."
+Project,E-Commerce Dashboard,"Full-featured admin dashboard with analytics. Tech: Next.js, TypeScript, PostgreSQL, Stripe."
+Project,Cloud Infrastructure Tool,"DevOps automation platform. Tech: Python, AWS, Docker, Kubernetes."
+Project,Mobile Fitness App,"Cross-platform fitness tracker. Tech: React Native, Firebase, Redux, Chart.js."
+Project,Blockchain Wallet,"Secure multi-chain crypto wallet. Tech: Solidity, Web3.js, React, Ethers.js."
+Project,Video Streaming Platform,"Netflix-like service. Tech: Vue.js, Node.js, MongoDB, Redis."
+Project,Weather Forecast App,"Real-time weather with location alerts. Tech: React, OpenWeather API, PWA."
+Project,Task Management System,"Collaborative project management. Tech: Angular, NestJS, GraphQL, PostgreSQL."
+Project,Social Media Analytics,"Engagement tracking dashboard. Tech: React, D3.js, Python, FastAPI."
+Project,Recipe Sharing Platform,"Community recipe sharing. Tech: Next.js, Prisma, Cloudinary, Stripe."
+Philosophy,Clean Code,Highly values clean and maintainable code architecture.
+Philosophy,Learning,Continuously exploring cutting-edge technologies.
+Philosophy,UX,Dedicated to providing exceptional user experiences.

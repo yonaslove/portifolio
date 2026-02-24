@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ✅ Blur mode effect toggled via JavaScript */
+.blur-mode {
+  backdrop-filter: blur(12px) brightness(1.35);
+  background-color: rgba(206, 183, 183, 0.87);
+  transition: backdrop-filter 0.35s ease, background-color 0.35s ease;
+}
+
+/* ✅ Remove old overlay fallback (not needed anymore) */
+/* #overlay { ... }  — DELETED */
+
+/* ✅ Icon styling */
+.blurIcon {
+  cursor: pointer;
+  font-size: 1.6rem;
+  transition: transform 0.3s ease;
+}
+.blurIcon:hover {
+  transform: scale(1.15);
+}
+
+@layer base {
+  :root {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+    --primary: 189 94% 43%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 271 81% 56%;
+    --accent: 330 81% 60%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-x-hidden;
+    background-color: hsl(var(--background));
+    /* Natural "Sunset / Ocean" base with soft complementary glows */
+    background-image: linear-gradient(180deg, hsl(220 30% 6%), hsl(235 30% 9%));
+    transition: background 0.45s ease, color 0.3s ease;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Soft organic blobs (decorative, subtle) */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    z-index: 0;
+    pointer-events: none;
+    filter: blur(60px) saturate(120%);
+    opacity: 0.75;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  /* warm coral glow (bottom-left) */
+  body::before {
+    width: 900px;
+    height: 640px;
+    left: -15%;
+    bottom: -20%;
+    background: radial-gradient(closest-side, rgba(255,142,105,0.14), rgba(255,142,105,0.04) 40%, transparent 60%);
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* cool teal / purple glow (top-right) */
+  body::after {
+    width: 840px;
+    height: 540px;
+    right: -10%;
+    top: -15%;
+    background: radial-gradient(closest-side, rgba(88,150,255,0.10), rgba(132,87,255,0.06) 45%, transparent 65%);
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Glass styles */
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  html { scroll-behavior: smooth; }
+}
+
+@keyframes bgShift {
+  0% {
+    /* keep base still; blobs add the motion */
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(189 94% 43%), hsl(271 81% 56%));
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+
+  .card-3d {
+    @apply transition-all duration-300;
+    transform-style: preserve-3d;
+  }
+
+  .card-3d:hover {
+    transform: translateY(-10px) rotateX(5deg);
+  }
+}
+
+@layer utilities {
+  .bg-background { background-color: hsl(var(--background)); }
+  .text-foreground { color: hsl(var(--foreground)); }
+  .bg-primary { background-color: hsl(var(--primary)); }
+  .text-primary-foreground { color: hsl(var(--primary-foreground)); }
+  .bg-secondary { background-color: hsl(var(--secondary)); }
+  .bg-accent { background-color: hsl(var(--accent)); }
+  .rounded-radius { border-radius: var(--radius); }
+}
+
+/* 🌕 Optional future Light Theme support */
+:root.light-theme {
+  --background: 210 20% 98%;
+  --foreground: 220 10% 12%;
+}
+
+/* Light theme overrides for decorative blobs */
+:root.light-theme body {
+  background-image: linear-gradient(180deg, hsl(210 50% 98%), hsl(200 30% 96%));
+}
+:root.light-theme body::before { opacity: 0.42; transform: translateY(6px); }
+:root.light-theme body::after { opacity: 0.38; transform: translateY(-6px); }
+
+/* Floating theme toggle button */
+.theme-toggle-btn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  box-shadow: 0 6px 18px rgba(8,10,25,0.45);
+  backdrop-filter: blur(8px) saturate(120%);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.25s ease, color 0.2s ease;
+}
+.theme-toggle-btn:hover { transform: translateY(-3px) scale(1.03); }
+
+/* Light-theme button adjustments */
+.light-theme .theme-toggle-btn {
+  background: linear-gradient(180deg, rgba(10,10,10,0.06), rgba(10,10,10,0.02));
+  color: #111827;
+  border-color: rgba(0,0,0,0.06);
+}
+
+/* Perspective utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}

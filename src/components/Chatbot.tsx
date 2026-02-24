@@ -54,61 +54,24 @@ const Chatbot = () => {
     }
 
     try {
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.');
+      // Use the unified Vercel/Local API (Relative path works for both)
+      const url = "/api/chat";
 
-      // On localhost (or local network), we prefer the local endpoint to avoid Supabase CORS/Auth issues during dev
-      let fetchUrl = isLocalhost ? "http://localhost:5178/chat" : CHAT_URL;
+      console.log(`[Chat] Sending message to: ${url}`);
 
-      console.log(`Routing chat to: ${fetchUrl}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout for AI
 
-      const initiateFetch = async (url: string, useHeaders: boolean = true) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
-        const headers: Record<string, string> = {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
           "Content-Type": "application/json",
-        };
+        },
+        body: JSON.stringify({ messages: newMessages.slice(0, -1) }),
+        signal: controller.signal
+      });
 
-        if (useHeaders) {
-          headers["Authorization"] = `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`;
-          headers["apikey"] = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        }
-
-        console.log(`[Chat] Fetching: ${url} (Headers: ${useHeaders})`);
-
-        try {
-          const resp = await fetch(url, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ messages: newMessages.slice(0, -1) }),
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-          return resp;
-        } catch (e) {
-          clearTimeout(timeoutId);
-          throw e;
-        }
-      };
-
-      let response: Response;
-      try {
-        // Try local API first on localhost (without custom headers to avoid CORS preflight issues)
-        // On local network or localhost, use the proxied local API
-        if (isLocalhost) {
-          try {
-            response = await initiateFetch("/api/chat", false);
-          } catch (localErr) {
-            console.warn("Local API failed, trying Supabase...", localErr);
-            response = await initiateFetch(CHAT_URL, true);
-          }
-        } else {
-          response = await initiateFetch(CHAT_URL, true);
-        }
-      } catch (networkErr: any) {
-        console.error("Network Error caught:", networkErr);
-        throw new Error(networkErr.message || "Failed to fetch");
-      }
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         let errorMsg = `HTTP Error ${response.status}`;

@@ -126,43 +126,29 @@ const Contact = () => {
         const { data, error } = await supabase.functions.invoke('send-contact-email', {
           body: submissionData
         });
+
         if (!error && data && (data as any).success) {
           sent = true;
           console.log('Email sent via Supabase function', data);
         } else {
-          console.warn('Supabase function did not send email, falling back', error, data);
+          console.error('Supabase function error:', error || data);
         }
       } catch (fnErr) {
-        console.warn('Supabase function call failed, will try local API fallback', fnErr);
+        console.warn('Supabase function call failed, checking fallback...', fnErr);
       }
 
-      // Fallback: local API server (useful during local development)
-      if (!sent) {
+      // Fallback 1: local API server (only works if server is running)
+      if (!sent && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         try {
-          const apiUrl = '/api/send-email';
-
-          const resp = await fetch(apiUrl, {
+          const resp = await fetch('/api/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(submissionData),
           });
 
-          if (!resp.ok) {
-            const errBody = await resp.json().catch(() => ({}));
-            console.error('Local email API error', resp.status, errBody);
-            throw new Error(errBody?.error || 'Local email API failed');
-          }
-
-          const respJson = await resp.json().catch(() => ({}));
-          if (respJson?.success) {
+          if (resp.ok) {
             sent = true;
-            console.log('Email sent/logged via local API', respJson);
-            if (respJson.message && respJson.message.includes('logged')) {
-              toast({
-                title: "Development Mode",
-                description: "Message logged to server console. Configure SMTP in .env for real emails.",
-              });
-            }
+            console.log('Email sent via local API');
           }
         } catch (localErr) {
           console.error('Local API fallback failed:', localErr);
@@ -172,13 +158,24 @@ const Contact = () => {
       if (sent) {
         toast({
           title: "Message Sent! 🎉",
-          description: "Thanks for reaching out! I've received your message at yonasyirgu718@gmail.com.",
+          description: "Thanks for reaching out! I've received your message.",
         });
+        setFormData({ name: "", email: "", message: "" });
       } else {
-        throw new Error('All email delivery methods failed');
-      }
+        // Fallback 2: Direct Mail Client (The Ultimate Fail-Safe)
+        toast({
+          title: "Service Busy",
+          description: "Automatic delivery failed. Opening your email client...",
+          variant: "default",
+        });
 
-      setFormData({ name: "", email: "", message: "" });
+        const subject = encodeURIComponent(`Portfolio Contact: ${validatedData.name}`);
+        const body = encodeURIComponent(submissionData.message);
+        window.location.href = `mailto:yonasyirgu718@gmail.com?subject=${subject}&body=${body}`;
+
+        // We consider this a "soft success" as the user can still send the message
+        setFormData({ name: "", email: "", message: "" });
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
 

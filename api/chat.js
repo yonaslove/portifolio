@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 export default async function handler(req, res) {
     if (req.method === 'OPTIONS') {
         return res.status(200).send('ok');
@@ -14,10 +17,21 @@ export default async function handler(req, res) {
         }
 
         const lastMessage = messages[messages.length - 1].content.toLowerCase();
+
+        // --- LOAD DATA FROM CSV ---
+        let knowledgeBase = "";
+        try {
+            const csvPath = path.join(process.cwd(), 'public', 'yonas_profile.csv');
+            knowledgeBase = fs.readFileSync(csvPath, 'utf8');
+        } catch (e) {
+            console.warn("Could not read CSV, using default profile", e);
+            knowledgeBase = "Name: Yonas Yirgu. Professional Senior Full Stack Developer.";
+        }
+
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
         const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-        // --- CASE 1: USE GEMINI API (Highly Recommended & Free level available) ---
+        // --- CASE 1: USE GEMINI API ---
         if (GEMINI_API_KEY) {
             try {
                 const response = await fetch(
@@ -31,7 +45,7 @@ export default async function handler(req, res) {
                                 parts: [{ text: m.content }]
                             })),
                             systemInstruction: {
-                                parts: [{ text: "You are the AI Assistant for Yonas Yirgu's Portfolio. Be professional, engaging, and guide visitors. Yonas is a Senior Full Stack Developer (React, Next.js, Node.js, Python) with 6+ years of experience based in Addis Ababa. His top projects are the AI Chatbot, Blockchain Wallet, and Video Streaming platform." }]
+                                parts: [{ text: `You are the exclusive AI Assistant for Yonas Yirgu's Portfolio. Answer ONLY based on this verified dataset:\n\n${knowledgeBase}\n\nIf asked about something not in this data, politely redirect to his contact info.` }]
                             }
                         }),
                     }
@@ -40,90 +54,58 @@ export default async function handler(req, res) {
                 if (response.ok) {
                     res.setHeader('Content-Type', 'text/event-stream');
                     res.setHeader('Cache-Control', 'no-cache');
-                    res.setHeader('Connection', 'keep-alive');
-
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
-                    let assistantContent = "";
-
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
-
                         const chunk = decoder.decode(value);
-                        // Gemini stream returns JSON objects in an array format or individual chunks
-                        // For simplicity in this proxy, we'll try to extract the text and re-format for our frontend
-                        try {
-                            // Basic regex to find text content in Gemini chunks
-                            const matches = chunk.match(/"text":\s*"([^"]+)"/g);
-                            if (matches) {
-                                for (const match of matches) {
-                                    const text = match.slice(8, -1).replace(/\\n/g, '\n');
-                                    assistantContent += text;
-                                    const payload = { choices: [{ delta: { content: text } }] };
-                                    res.write(`data: ${JSON.stringify(payload)}\n\n`);
-                                }
+                        const matches = chunk.match(/"text":\s*"([^"]+)"/g);
+                        if (matches) {
+                            for (const match of matches) {
+                                const text = match.slice(8, -1).replace(/\\n/g, '\n');
+                                res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`);
                             }
-                        } catch (e) { }
+                        }
                     }
                     res.write(`data: [DONE]\n\n`);
                     return res.end();
                 }
-            } catch (err) {
-                console.error("Gemini failed:", err);
+            } catch (err) { }
+        }
+
+        // --- CASE 2: SMART CSV-BASED STATIC FALLBACK ---
+        // If no AI key, we look into the CSV rows for matches
+        const rows = knowledgeBase.split('\n').filter(r => r.includes(','));
+        let reply = "I'm Yonas's AI assistant. I can help with details from his professional profile. Please try asking about his skills, experience, or specific projects!";
+
+        // Logic: Look for the most relevant row in the CSV
+        for (const row of rows) {
+            const [category, item, details] = row.split(',').map(s => s.trim().replace(/"/g, ''));
+            const combined = `${category} ${item}`.toLowerCase();
+
+            if (lastMessage.includes(item.toLowerCase()) || lastMessage.includes(category.toLowerCase())) {
+                if (category === "Profile" && item === "Name") reply = `His name is ${details}.`;
+                else if (category === "Profile" && item === "Role") reply = `Yonas is a ${details}.`;
+                else if (category === "Skills") reply = `In ${item}, Yonas is proficient in: ${details}.`;
+                else if (category === "Project") reply = `The ${item} project is: ${details}`;
+                else if (category === "Experience") reply = `In ${item}, Yonas was a ${details}`;
+                else reply = `${item}: ${details}`;
+                break; // found a good match
             }
         }
 
-        // --- CASE 2: USE OPENAI API ---
-        if (OPENAI_API_KEY) {
-            try {
-                const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-3.5-turbo",
-                        messages: [
-                            { role: "system", content: "You are Yonas's Portfolio Assistant." },
-                            ...messages
-                        ],
-                        stream: true,
-                    }),
-                });
-
-                if (response.ok) {
-                    res.setHeader('Content-Type', 'text/event-stream');
-                    res.setHeader('Cache-Control', 'no-cache');
-                    res.setHeader('Connection', 'keep-alive');
-
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        res.write(decoder.decode(value));
-                    }
-                    return res.end();
-                }
-            } catch (err) {
-                console.error("OpenAI failed:", err);
-            }
+        // Default Hi/Hello
+        if (lastMessage.includes("hi") || lastMessage.includes("hello")) {
+            reply = "Hi! I'm Yonas's assistant. Ask me about his projects, skills, or experience (I'm using his verified CSV data!).";
         }
-
-        // --- CASE 3: STATIC FALLBACK (Always works) ---
-        let reply = "I'm Yonas's AI assistant. Please contact Yonas directly at yonasyirgu718@gmail.com for inquiries!";
-        if (lastMessage.includes("hi") || lastMessage.includes("hello")) reply = "Hello! I'm Yonas's AI guide. How can I help you today?";
-        else if (lastMessage.includes("skill")) reply = "Yonas is a Senior Full Stack Developer (React, Next.js, Node.js, Python).";
 
         res.setHeader('Content-Type', 'text/event-stream');
-        const payload = { choices: [{ delta: { content: reply } }] };
-        res.write(`data: ${JSON.stringify(payload)}\n\n`);
+        res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: reply } }] })}\n\n`);
         res.write(`data: [DONE]\n\n`);
         res.end();
 
     } catch (error) {
-        res.status(500).json({ error: 'Chat failed', details: error.message });
+        res.status(500).json({ error: 'Chat failed' });
     }
 }

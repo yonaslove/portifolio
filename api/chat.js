@@ -74,33 +74,72 @@ export default async function handler(req, res) {
             } catch (err) { }
         }
 
-        // --- CASE 2: SMART CSV-BASED STATIC FALLBACK ---
-        // If no AI key, we look into the CSV rows for matches
+        // --- CASE 3: COMPREHENSIVE CSV-BASED FALLBACK (No API Key Required) ---
         const rows = knowledgeBase.split('\n').filter(r => r.includes(','));
-        let reply = "I'm Yonas's AI assistant. I can help with details from his professional profile. Please try asking about his skills, experience, or specific projects!";
+        let replyParts = [];
+        let isGreeting = lastMessage.includes("hi") || lastMessage.includes("hello");
 
-        // Logic: Look for the most relevant row in the CSV
-        for (const row of rows) {
-            const [category, item, details] = row.split(',').map(s => s.trim().replace(/"/g, ''));
-            const combined = `${category} ${item}`.toLowerCase();
+        if (lastMessage.includes("yonas") || lastMessage.includes("who is") || lastMessage.includes("profile") || lastMessage.includes("about")) {
+            // Full Profile Summary
+            const name = rows.find(r => r.includes("Profile,Name"))?.split(',')[2]?.replace(/"/g, '') || "Yonas Yirgu";
+            const role = rows.find(r => r.includes("Profile,Role"))?.split(',')[2]?.replace(/"/g, '') || "Developer";
+            const loc = rows.find(r => r.includes("Profile,Location"))?.split(',')[2]?.replace(/"/g, '') || "Addis Ababa";
+            replyParts.push(`${name} is a ${role} based in ${loc}.`);
+            replyParts.push("He has a strong background in Full Stack development and a passion for creating innovative tech solutions.");
+        }
 
-            if (lastMessage.includes(item.toLowerCase()) || lastMessage.includes(category.toLowerCase())) {
-                if (category === "Profile" && item === "Name") reply = `His name is ${details}.`;
-                else if (category === "Profile" && item === "Role") reply = `Yonas is a ${details}.`;
-                else if (category === "Skills") reply = `In ${item}, Yonas is proficient in: ${details}.`;
-                else if (category === "Project") reply = `The ${item} project is: ${details}`;
-                else if (category === "Experience") reply = `In ${item}, Yonas was a ${details}`;
-                else reply = `${item}: ${details}`;
-                break; // found a good match
+        if (lastMessage.includes("skill") || lastMessage.includes("tech") || lastMessage.includes("stack")) {
+            const skills = rows.filter(r => r.startsWith("Skills")).map(r => {
+                const parts = r.split(',');
+                return `**${parts[1]}**: ${parts.slice(2).join(',').replace(/"/g, '')}`;
+            });
+            if (skills.length) {
+                replyParts.push("### Technical Skills:");
+                replyParts.push(...skills);
             }
         }
 
-        // Default Hi/Hello
-        if (lastMessage.includes("hi") || lastMessage.includes("hello")) {
-            reply = "Hi! I'm Yonas's assistant. Ask me about his projects, skills, or experience (I'm using his verified CSV data!).";
+        if (lastMessage.includes("project") || lastMessage.includes("work")) {
+            const projects = rows.filter(r => r.startsWith("Project")).map(r => {
+                const parts = r.split(',');
+                return `- **${parts[1]}**: ${parts.slice(2).join(',').replace(/"/g, '')}`;
+            });
+            if (projects.length) {
+                replyParts.push("### Featured Projects:");
+                replyParts.push(...projects);
+            }
+        }
+
+        if (lastMessage.includes("experience") || lastMessage.includes("career") || lastMessage.includes("history")) {
+            const exp = rows.filter(r => r.startsWith("Experience")).map(r => {
+                const parts = r.split(',');
+                return `- **${parts[1]}**: ${parts.slice(2).join(',').replace(/"/g, '')}`;
+            });
+            if (exp.length) {
+                replyParts.push("### Professional Experience:");
+                replyParts.push(...exp);
+            }
+        }
+
+        if (lastMessage.includes("contact") || lastMessage.includes("email") || lastMessage.includes("phone")) {
+            const email = rows.find(r => r.includes("Profile,Email"))?.split(',')[2]?.replace(/"/g, '') || "yonasyirgu718@gmail.com";
+            const phone = rows.find(r => r.includes("Profile,Phone"))?.split(',')[2]?.replace(/"/g, '') || "+251 987 384 233";
+            replyParts.push("### Contact Information:");
+            replyParts.push(`- **Email**: ${email}`);
+            replyParts.push(`- **Phone**: ${phone}`);
+        }
+
+        let reply = replyParts.join('\n\n');
+
+        if (!reply || isGreeting) {
+            const welcome = "Hi! I'm Yonas's AI assistant. I can tell you all about his projects, technical skills, and professional experience using his verified data profile.";
+            reply = isGreeting ? `${welcome}\n\n${reply}` : welcome;
         }
 
         res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
         res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: reply } }] })}\n\n`);
         res.write(`data: [DONE]\n\n`);
         res.end();

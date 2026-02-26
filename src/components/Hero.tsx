@@ -25,13 +25,14 @@ const Hero = () => {
     try {
       const element = cvRef.current;
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 1.5, // Reduced from 2 to save size
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
       });
 
-      const imgData = canvas.toDataURL("image/png");
+      // Use JPEG with 0.8 quality instead of PNG to significantly reduce file size
+      const imgData = canvas.toDataURL("image/jpeg", 0.8);
       const tempPdf = new jsPDF();
       const imgProps = tempPdf.getImageProperties(imgData);
       const pdfWidth = 210; // Fixed A4 width in mm
@@ -41,9 +42,10 @@ const Hero = () => {
         orientation: "portrait",
         unit: "mm",
         format: [pdfWidth, pdfHeight],
+        compress: true // Enable internal PDF compression
       });
 
-      dynamicPdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      dynamicPdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       dynamicPdf.save("Yonas_Yirgu_CV.pdf");
 
       toast.success("CV downloaded successfully!", { id: toastId });

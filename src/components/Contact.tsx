@@ -6,6 +6,7 @@ import { Mail, MapPin, Phone, Navigation, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { personalInfo } from "@/data/portfolio";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -173,7 +174,7 @@ const Contact = () => {
 
         const subject = encodeURIComponent(`Portfolio Contact: ${validatedData.name}`);
         const body = encodeURIComponent(submissionData.message);
-        window.location.href = `mailto:yonasyirgu718@gmail.com?subject=${subject}&body=${body}`;
+        window.location.href = `mailto:${personalInfo.email}?subject=${subject}&body=${body}`;
 
         setFormData({ name: "", email: "", message: "" });
       }
@@ -243,10 +244,10 @@ const Contact = () => {
                 <div>
                   <p className="font-semibold">Email</p>
                   <a
-                    href="mailto:yonasyirgu718@gmail.com"
+                    href={`mailto:${personalInfo.email}`}
                     className="text-foreground/70 hover:text-primary transition-colors"
                   >
-                    yonasyirgu718@gmail.com
+                    {personalInfo.email}
                   </a>
                 </div>
               </div>
@@ -261,10 +262,10 @@ const Contact = () => {
                 <div>
                   <p className="font-semibold">Phone</p>
                   <a
-                    href="tel:+251987384233"
+                    href={`tel:${personalInfo.phone.replace(/\s/g, '')}`}
                     className="text-foreground/70 hover:text-secondary transition-colors"
                   >
-                    +251 987 384 233
+                    {personalInfo.phone}
                   </a>
                 </div>
               </div>
@@ -278,7 +279,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <p className="font-semibold">Location</p>
-                  <p className="text-foreground/70">Addis Ababa, Ethiopia</p>
+                  <p className="text-foreground/70">{personalInfo.location}</p>
                 </div>
               </div>
             </div>

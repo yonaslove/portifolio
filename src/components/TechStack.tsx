@@ -13,6 +13,7 @@ import {
   Box,
   Compass
 } from "lucide-react";
+import { skills } from "@/data/portfolio";
 
 const TechStack = () => {
   const [rotation, setRotation] = useState(0);
@@ -25,11 +26,17 @@ const TechStack = () => {
     { name: "PostgreSQL", color: "#336791", Icon: Database },
     { name: "MongoDB", color: "#47A248", Icon: Database },
     { name: "Docker", color: "#2496ED", Icon: Box },
-    { name: "AWS", color: "#FF9900", Icon: Cloud },
-    { name: "GraphQL", color: "#E10098", Icon: Layers },
-    { name: "Redis", color: "#DC382D", Icon: Zap },
-    { name: "Kubernetes", color: "#326CE5", Icon: Compass },
+    // { name: "AWS", color: "#FF9900", Icon: Cloud },
+    // { name: "GraphQL", color: "#E10098", Icon: Layers },
+    { name: "Java", color: "#f89820", Icon: Cpu },        // Java → backend / JVM power
+    { name: "PHP", color: "#777BB4", Icon: Database },    // PHP → server/database driven
+    { name: "JS", color: "#F7DF1E", Icon: Zap },          // JavaScript → dynamic & fast
+    { name: "Bootstrap", color: "#7952B3", Icon: Layers },// UI framework
+    { name: "CSS", color: "#264de4", Icon: Workflow },    // styling & layout flow
+    { name: "Html", color: "#E34F26", Icon: Globe },      // web structure
     { name: "Next.js", color: "#000000", Icon: Globe },
+    { name: "C#", color: "#362575ff", Icon: Code2 },
+    { name: "C++", color: "#00599C", Icon: Terminal },
   ];
 
   useEffect(() => {
@@ -97,7 +104,7 @@ const TechStack = () => {
           <div className="glass p-6 rounded-lg hover-scale animate-fade-in-up">
             <h3 className="text-xl font-bold mb-3 text-primary">Frontend</h3>
             <p className="text-foreground/70 text-sm">
-              React, Vue, Next.js, TypeScript, Tailwind CSS
+              {skills.frontend.join(", ")}
             </p>
           </div>
           <div
@@ -106,7 +113,7 @@ const TechStack = () => {
           >
             <h3 className="text-xl font-bold mb-3 text-secondary">Backend</h3>
             <p className="text-foreground/70 text-sm">
-              Node.js, Python, PostgreSQL, MongoDB, Redis
+              {skills.backend.join(", ")}
             </p>
           </div>
           <div
@@ -115,7 +122,7 @@ const TechStack = () => {
           >
             <h3 className="text-xl font-bold mb-3 text-accent">DevOps</h3>
             <p className="text-foreground/70 text-sm">
-              Docker, Kubernetes, AWS, CI/CD, GitHub Actions
+              {skills.devops.join(", ")}
             </p>
           </div>
         </div>

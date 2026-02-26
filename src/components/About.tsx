@@ -1,43 +1,22 @@
 import { Code, Database, Cloud, Zap, Rocket, Coffee, Globe, Target } from "lucide-react";
+import { experience } from "@/data/portfolio";
 
 const About = () => {
-  const timeline = [
-    {
-      year: "2024",
-      title: "Senior Full Stack Developer",
-      company: "Tech Innovations Inc",
-      icon: Zap,
-      color: "text-primary",
-    },
-    {
-      year: "2022",
-      title: "Full Stack Developer",
-      company: "Digital Solutions Ltd",
-      icon: Code,
-      color: "text-secondary",
-    },
-    {
-      year: "2020",
-      title: "Backend Developer",
-      company: "Cloud Services Co",
-      icon: Cloud,
-      color: "text-accent",
-    },
-    {
-      year: "2018",
-      title: "Junior Developer",
-      company: "StartUp Ventures",
-      icon: Database,
-      color: "text-primary",
-    },
-  ];
+  const iconMap: Record<string, any> = {
+    Zap,
+    Code,
+    Cloud,
+    Database
+  };
 
   const facts = [
-    { text: "Built 50+ production applications", Icon: Rocket },
+    { text: "Built 15+ production applications", Icon: Rocket },
     { text: "Powered by coffee and curiosity", Icon: Coffee },
     { text: "Open source contributor", Icon: Globe },
     { text: "Problem solver at heart", Icon: Target },
   ];
+
+  const colors = ["text-primary", "text-secondary", "text-accent"];
 
   return (
     <section id="about" className="py-20 relative">
@@ -55,29 +34,33 @@ const About = () => {
           {/* Timeline */}
           <div className="space-y-6">
             <h3 className="text-2xl font-bold mb-8 gradient-text">Experience Timeline</h3>
-            {timeline.map((item, index) => (
-              <div
-                key={index}
-                className="flex gap-4 animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="flex flex-col items-center">
-                  <div className={`glass-strong p-3 rounded-full ${item.color} glow-cyan`}>
-                    <item.icon className="w-6 h-6" />
+            {experience.map((item, index) => {
+              const Icon = iconMap[item.icon] || Code;
+              const color = colors[index % colors.length];
+              return (
+                <div
+                  key={index}
+                  className="flex gap-4 animate-fade-in-up"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="flex flex-col items-center">
+                    <div className={`glass-strong p-3 rounded-full ${color} glow-cyan`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    {index !== experience.length - 1 && (
+                      <div className="w-0.5 h-full bg-gradient-to-b from-primary to-transparent mt-2" />
+                    )}
                   </div>
-                  {index !== timeline.length - 1 && (
-                    <div className="w-0.5 h-full bg-gradient-to-b from-primary to-transparent mt-2" />
-                  )}
-                </div>
-                <div className="flex-1 pb-8">
-                  <div className="glass p-4 rounded-lg hover-scale cursor-pointer">
-                    <span className="text-primary font-semibold">{item.year}</span>
-                    <h4 className="text-lg font-bold mt-1">{item.title}</h4>
-                    <p className="text-foreground/70 text-sm">{item.company}</p>
+                  <div className="flex-1 pb-8">
+                    <div className="glass p-4 rounded-lg hover-scale cursor-pointer">
+                      <span className="text-primary font-semibold">{item.period.split(' ')[0]}</span>
+                      <h4 className="text-lg font-bold mt-1">{item.title}</h4>
+                      <p className="text-foreground/70 text-sm">{item.company}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Fun Facts & Skills */}

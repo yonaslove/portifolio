@@ -7,10 +7,12 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 
+import { personalInfo } from "@/data/portfolio";
+
 const Hero = () => {
   const [typedText, setTypedText] = useState("");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const titles = ["Software Engineer", "Full Stack Developer", "Tech Storyteller"];
+  const titles = personalInfo.titles;
   const [titleIndex, setTitleIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const cvRef = useRef<HTMLDivElement>(null);
@@ -30,18 +32,19 @@ const Hero = () => {
       });
 
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const tempPdf = new jsPDF();
+      const imgProps = tempPdf.getImageProperties(imgData);
+      const pdfWidth = 210; // Fixed A4 width in mm
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("Yonas_Yirgu_CV.pdf");
+      const dynamicPdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [pdfWidth, pdfHeight],
+      });
+
+      dynamicPdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      dynamicPdf.save("Yonas_Yirgu_CV.pdf");
 
       toast.success("CV downloaded successfully!", { id: toastId });
     } catch (error) {
@@ -126,7 +129,7 @@ const Hero = () => {
 
           {/* Intro Text */}
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in-up">
-            Hi, I'm <span className="gradient-text">Yonas Yirgu</span>
+            Hi, I'm <span className="gradient-text">{personalInfo.name}</span>
           </h1>
 
           {/* Typing Animation */}
@@ -139,8 +142,7 @@ const Hero = () => {
 
           {/* Description */}
           <p className="text-lg text-foreground/70 mb-8 max-w-2xl mx-auto animate-fade-in-up">
-            Crafting elegant solutions to complex problems. Passionate about building
-            scalable applications and exploring cutting-edge technologies.
+            {personalInfo.homeDescription}
           </p>
 
           {/* CTA Buttons */}
@@ -175,7 +177,7 @@ const Hero = () => {
         {/* Social Links */}
         <div className="flex gap-6 justify-center animate-fade-in-up">
           <a
-            href="https://github.com"
+            href={`https://${personalInfo.github}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-foreground/60 hover:text-primary transition-colors hover-scale"
@@ -183,7 +185,7 @@ const Hero = () => {
             <Github size={28} />
           </a>
           <a
-            href="https://linkedin.com"
+            href={`https://${personalInfo.linkedin}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-foreground/60 hover:text-primary transition-colors hover-scale"
@@ -191,7 +193,7 @@ const Hero = () => {
             <Linkedin size={28} />
           </a>
           <a
-            href="mailto:yonasyirgu718@gmail.com"
+            href={`mailto:${personalInfo.email}`}
             className="text-foreground/60 hover:text-primary transition-colors hover-scale"
           >
             <Mail size={28} />
